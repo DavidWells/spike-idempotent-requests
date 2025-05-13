@@ -9,6 +9,7 @@ provider:
   environment:
     IDEMPOTENCY_TABLE: ${self:service}-${sls:stage}-idempotency
     LOG_LEVEL: ${opt:logLevel, 'info'}
+    NODE_OPTIONS: --enable-source-maps
   iam:
     role:
       statements:
@@ -28,6 +29,9 @@ functions:
           path: /api/idempotent
           method: post
           cors: true
+    environment:
+      LOG_LEVEL: ${opt:logLevel, 'info'}
+    logRetentionInDays: 14
 
 resources:
   Resources:
