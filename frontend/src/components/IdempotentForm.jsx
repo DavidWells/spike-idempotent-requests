@@ -1,12 +1,14 @@
-import { useState } from 'react'
-import { TextInput, Button, Stack, Text, Paper, Alert } from '@mantine/core'
+import { useState, useEffect } from 'react'
+import { TextInput, Button, Stack, Text, Paper, Alert, Group, Badge } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { makeIdempotentRequest } from '../utils/idempotency'
+import { getCacheSize, clearCache } from '../utils/cache'
 
 function IdempotentForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
+  const [cacheSize, setCacheSize] = useState(0)
 
   const form = useForm({
     initialValues: {
@@ -18,6 +20,10 @@ function IdempotentForm() {
       email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email')
     }
   })
+
+  useEffect(() => {
+    setCacheSize(getCacheSize())
+  }, [success])
 
   const handleSubmit = async (values) => {
     setIsSubmitting(true)
@@ -31,26 +37,46 @@ function IdempotentForm() {
       form.reset()
     } catch (error) {
       console.error('Error submitting form:', error)
-      setError(error.message)
+      setError(error.message || 'An error occurred while submitting the form')
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleClearCache = () => {
+    clearCache()
+    setCacheSize(0)
   }
 
   return (
     <Paper shadow="sm" p="xl" withBorder>
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack>
-          <Text size="xl" fw={700}>Idempotent Form</Text>
+          <Group justify="space-between" align="center">
+            <Text size="xl" fw={700}>Idempotent Form</Text>
+            <Group>
+              <Badge color="blue" size="lg">
+                Cache Size: {cacheSize}
+              </Badge>
+              <Button 
+                variant="light" 
+                color="red" 
+                onClick={handleClearCache}
+                disabled={cacheSize === 0}
+              >
+                Clear Cache
+              </Button>
+            </Group>
+          </Group>
           
           {error && (
-            <Alert color="red" title="Error">
+            <Alert color="red" title="Error" withCloseButton onClose={() => setError(null)}>
               {error}
             </Alert>
           )}
 
           {success && (
-            <Alert color="green" title="Success">
+            <Alert color="green" title="Success" withCloseButton onClose={() => setSuccess(false)}>
               Form submitted successfully!
             </Alert>
           )}
