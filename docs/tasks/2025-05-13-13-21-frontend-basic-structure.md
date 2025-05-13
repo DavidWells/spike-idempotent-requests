@@ -2,7 +2,7 @@
 
 Frontend should be vanilla JS and use JSdocs for types.
 
-## Commit 1: feat: Initialize React application with Vite
+## Commit 1: feat: Initialize React application with Vite ✅ 80d796a
 **Description:**
 - Create `/frontend` directory and initialize Vite project with React template
 - Configure Vite for development and production builds
