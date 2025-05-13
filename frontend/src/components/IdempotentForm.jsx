@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { TextInput, Button, Stack, Text, Paper } from '@mantine/core'
+import { TextInput, Button, Stack, Text, Paper, Alert } from '@mantine/core'
 import { useForm } from '@mantine/form'
+import { makeIdempotentRequest } from '../utils/idempotency'
 
 function IdempotentForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(false)
 
   const form = useForm({
     initialValues: {
@@ -18,11 +21,17 @@ function IdempotentForm() {
 
   const handleSubmit = async (values) => {
     setIsSubmitting(true)
+    setError(null)
+    setSuccess(false)
+
     try {
-      // TODO: Implement idempotent request handling in next commit
-      console.log('Form values:', values)
+      const response = await makeIdempotentRequest('/api/submit', values)
+      console.log('Form submitted successfully:', response)
+      setSuccess(true)
+      form.reset()
     } catch (error) {
       console.error('Error submitting form:', error)
+      setError(error.message)
     } finally {
       setIsSubmitting(false)
     }
@@ -34,6 +43,18 @@ function IdempotentForm() {
         <Stack>
           <Text size="xl" fw={700}>Idempotent Form</Text>
           
+          {error && (
+            <Alert color="red" title="Error">
+              {error}
+            </Alert>
+          )}
+
+          {success && (
+            <Alert color="green" title="Success">
+              Form submitted successfully!
+            </Alert>
+          )}
+
           <TextInput
             label="Name"
             placeholder="Enter your name"
