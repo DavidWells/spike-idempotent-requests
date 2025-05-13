@@ -3,6 +3,9 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MantineProvider } from '@mantine/core'
 import Home from './Home'
+import { useIdempotentRequest } from '../hooks/useIdempotentRequest'
+import { useRequestCache } from '../hooks/useRequestCache'
+import { useIdempotencyKey } from '../hooks/useIdempotencyKey'
 
 // Mock hooks
 const mockMakeRequest = vi.fn()
@@ -66,8 +69,7 @@ describe('Home', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/test data/i)).toBeInTheDocument()
-      const cachedElements = screen.getAllByText(/cached/i)
-      expect(cachedElements.length).toBeGreaterThan(0)
+      expect(screen.getByText(/cached/i)).toBeInTheDocument()
     })
   })
 
