@@ -4,11 +4,21 @@ frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: nodejs20.x
+  runtime: nodejs22.x
   region: us-east-1
   environment:
     IDEMPOTENCY_TABLE: ${self:service}-${sls:stage}-idempotency
     LOG_LEVEL: ${opt:logLevel, 'info'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: !GetAtt IdempotencyTable.Arn
 
 functions:
   idempotent:

@@ -1,44 +1,39 @@
-import { storeIdempotencyRecord, getIdempotencyRecord } from '../lib/dynamodb.js'
-import { logger } from '../lib/logger.js'
-import { generateIdempotencyKey, validateIdempotencyKey } from '../lib/idempotency.js'
+import { makeIdempotent } from '@aws-lambda-powertools/idempotency'
+import { DynamoDBPersistenceLayer } from '@aws-lambda-powertools/idempotency/dynamodb'
+import { Logger } from '@aws-lambda-powertools/logger'
+
+const logger = new Logger()
+
+const persistenceStore = new DynamoDBPersistenceLayer({
+  tableName: process.env.IDEMPOTENCY_TABLE
+})
 
 /**
  * Lambda handler for idempotent requests
  * @param {object} event
  * @returns {object}
  */
-export async function handler(event) {
-  logger.info('Received request', { event })
-  const idempotencyKey = event.headers?.['Idempotency-Key']
+export const handler = makeIdempotent(
+  async (event) => {
+    logger.info('Processing new request', { event })
 
-  if (!idempotencyKey || !validateIdempotencyKey(idempotencyKey)) {
-    logger.warn('Missing or invalid idempotency key', { idempotencyKey })
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'Missing or invalid Idempotency-Key header' })
-    }
-  }
+    // Simulate business logic
+    const response = JSON.stringify({ 
+      message: 'Processed', 
+      requestId: event.headers?.['Idempotency-Key'] 
+    })
 
-  // Check for existing record
-  const cached = await getIdempotencyRecord(idempotencyKey)
-  if (cached && cached.response) {
-    logger.info('Returning cached response', { idempotencyKey })
     return {
       statusCode: 200,
-      body: cached.response
+      body: response
+    }
+  },
+  {
+    persistenceStore,
+    config: {
+      eventKeyJmesPath: 'headers."Idempotency-Key"',
+      throwOnNoIdempotencyKey: true,
+      expiresAfterSeconds: 24 * 60 * 60 // 24 hours
     }
   }
-
-  // Simulate business logic
-  const response = JSON.stringify({ message: 'Processed', requestId: idempotencyKey })
-  logger.info('Processing new request', { idempotencyKey })
-
-  // Store result with TTL (24h)
-  await storeIdempotencyRecord(idempotencyKey, { response }, 24 * 60 * 60)
-  logger.info('Stored idempotency record', { idempotencyKey })
-
-  return {
-    statusCode: 200,
-    body: response
-  }
-} 
+) 
