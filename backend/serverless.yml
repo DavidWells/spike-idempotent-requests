@@ -1,0 +1,37 @@
+service: idempotent-requests-demo
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  environment:
+    IDEMPOTENCY_TABLE: ${self:service}-${sls:stage}-idempotency
+    LOG_LEVEL: ${opt:logLevel, 'info'}
+
+functions:
+  idempotent:
+    handler: src/handlers/idempotent.handler
+    events:
+      - http:
+          path: /api/idempotent
+          method: post
+          cors: true
+
+resources:
+  Resources:
+    IdempotencyTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.IDEMPOTENCY_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true 
