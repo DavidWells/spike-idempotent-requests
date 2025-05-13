@@ -6,6 +6,26 @@ import { getCacheSize, clearCache } from '../utils/cache'
 
 const API_ENDPOINT = 'https://i53k6s6fk6.execute-api.us-west-1.amazonaws.com/prod/api/idempotent'
 
+/**
+ * IdempotentForm Component
+ * 
+ * A form component that handles idempotent requests to prevent duplicate submissions.
+ * It includes form validation, error handling, and client-side caching of successful responses.
+ * 
+ * Features:
+ * - Form validation for name and email fields
+ * - Idempotent request handling with unique keys
+ * - Client-side caching of successful responses
+ * - Visual feedback for form states (loading, success, error)
+ * - Cache management with size display and clear functionality
+ * 
+ * @example
+ * ```jsx
+ * <IdempotentForm />
+ * ```
+ * 
+ * @returns {JSX.Element} The rendered form component
+ */
 function IdempotentForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -27,6 +47,10 @@ function IdempotentForm() {
     setCacheSize(getCacheSize())
   }, [success])
 
+  /**
+   * Handles form submission with idempotent request
+   * @param {Object} values - Form values containing name and email
+   */
   const handleSubmit = async (values) => {
     setIsSubmitting(true)
     setError(null)
@@ -45,6 +69,9 @@ function IdempotentForm() {
     }
   }
 
+  /**
+   * Clears the form's response cache
+   */
   const handleClearCache = () => {
     clearCache()
     setCacheSize(0)
