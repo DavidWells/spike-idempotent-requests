@@ -5,7 +5,7 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs22.x
-  region: us-east-1
+  region: us-west-1
   environment:
     IDEMPOTENCY_TABLE: ${self:service}-${sls:stage}-idempotency
     LOG_LEVEL: ${opt:logLevel, 'info'}

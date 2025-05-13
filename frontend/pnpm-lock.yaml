@@ -58,7 +58,7 @@ importers:
         specifier: ^26.1.0
         version: 26.1.0
       playwright:
-        specifier: ^1.42.1
+        specifier: ^1.52.0
         version: 1.52.0
       vite:
         specifier: ^6.3.5
