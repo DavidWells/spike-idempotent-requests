@@ -28,7 +28,7 @@ This project is a demonstration application for implementing idempotent request 
 
 ## 3. Frameworks & Libraries (Backend)
 ### Core Framework
-- Serverless Framework
+- Serverless Framework using the `osls` fork `npm install osls`
   - Simplifies AWS Lambda deployment
   - Infrastructure as code capabilities
   - Easy local development and testing
