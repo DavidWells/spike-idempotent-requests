@@ -45,6 +45,7 @@ export const makeIdempotentRequest = async (url, data, options = {}) => {
   }
 
   const response = await fetch(url, {
+    method: 'POST',
     ...options,
     headers: {
       ...options.headers,
