@@ -4,6 +4,8 @@ import { useForm } from '@mantine/form'
 import { makeIdempotentRequest } from '../utils/idempotency'
 import { getCacheSize, clearCache } from '../utils/cache'
 
+const API_ENDPOINT = 'https://i53k6s6fk6.execute-api.us-west-1.amazonaws.com/prod/api/idempotent'
+
 function IdempotentForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -31,7 +33,7 @@ function IdempotentForm() {
     setSuccess(false)
 
     try {
-      const response = await makeIdempotentRequest('/api/submit', values)
+      const response = await makeIdempotentRequest(API_ENDPOINT, values)
       console.log('Form submitted successfully:', response)
       setSuccess(true)
       form.reset()
