@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { TextInput, Button, Stack, Text, Paper, Alert, Group, Badge } from '@mantine/core'
+import { TextInput, Button, Stack, Text, Paper, Group, Badge, Switch, Title } from '@mantine/core'
 import { useForm } from '@mantine/form'
-import { makeIdempotentRequest } from '../utils/idempotency'
-import { getCacheSize, clearCache } from '../utils/cache'
+import { makeIdempotentRequest, makeNormalRequest, getCacheCount, clearCache } from '../utils/idempotency'
+import { notifications } from '@mantine/notifications'
 
-const API_ENDPOINT = 'https://i53k6s6fk6.execute-api.us-west-1.amazonaws.com/prod/api/idempotent'
+const API_ENDPOINT = 'https://esmozxw7u4.execute-api.us-west-1.amazonaws.com/prod/api/idempotent'
 
 /**
  * IdempotentForm Component
@@ -28,14 +28,15 @@ const API_ENDPOINT = 'https://i53k6s6fk6.execute-api.us-west-1.amazonaws.com/pro
  */
 function IdempotentForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
   const [cacheSize, setCacheSize] = useState(0)
+  const [isIdempotent, setIsIdempotent] = useState(true)
+  const [lastResponse, setLastResponse] = useState(null)
 
   const form = useForm({
     initialValues: {
-      name: '',
-      email: ''
+      name: 'test',
+      email: 'test@test.com'
     },
     validate: {
       name: (value) => (value.length < 2 ? 'Name must be at least 2 characters' : null),
@@ -44,7 +45,7 @@ function IdempotentForm() {
   })
 
   useEffect(() => {
-    setCacheSize(getCacheSize())
+    setCacheSize(getCacheCount())
   }, [success])
 
   /**
@@ -53,17 +54,32 @@ function IdempotentForm() {
    */
   const handleSubmit = async (values) => {
     setIsSubmitting(true)
-    setError(null)
     setSuccess(false)
 
     try {
-      const response = await makeIdempotentRequest(API_ENDPOINT, values)
+      const makeRequest = isIdempotent ? makeIdempotentRequest : makeNormalRequest
+      const response = await makeRequest(API_ENDPOINT, values)
       console.log('Form submitted successfully:', response)
+      setLastResponse(response)
       setSuccess(true)
       form.reset()
+
+      let msg = response.isCached ? 'Form was "fake" submitted <br/>because its payload was cached with idempotency key.' : 'Form submitted successfully'
+      
+      notifications.show({
+        title: 'Success',
+        message: <div dangerouslySetInnerHTML={{ __html: msg }} />,
+        color: 'green',
+        autoClose: 5000
+      })
     } catch (error) {
       console.error('Error submitting form:', error)
-      setError(error.message || 'An error occurred while submitting the form')
+      notifications.show({
+        title: 'Error',
+        message: error.message || 'An error occurred while submitting the form',
+        color: 'red',
+        autoClose: 5000
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -75,63 +91,82 @@ function IdempotentForm() {
   const handleClearCache = () => {
     clearCache()
     setCacheSize(0)
+    notifications.show({
+      title: 'Cache Cleared',
+      message: 'All cached responses have been cleared',
+      color: 'blue',
+      autoClose: 5000
+    })
   }
 
   return (
-    <Paper shadow="sm" p="xl" withBorder>
-      <form onSubmit={form.onSubmit(handleSubmit)}>
-        <Stack>
-          <Group justify="space-between" align="center">
-            <Text size="xl" fw={700}>Idempotent Form</Text>
-            <Group>
-              <Badge color="blue" size="lg">
-                Cache Size: {cacheSize}
-              </Badge>
-              <Button 
-                variant="light" 
-                color="red" 
-                onClick={handleClearCache}
-                disabled={cacheSize === 0}
-              >
-                Clear Cache
-              </Button>
+    <>
+      <Paper 
+        style={{ minHeight: '500px', display: 'flex', flexDirection: 'column', marginBottom: '100px' }} 
+        shadow="sm" 
+        p="xl" 
+        withBorder
+      >
+        <Title order={1} style={{ marginBottom: '20px' }}>
+          Idempotent Form
+        </Title>
+        <Text style={{ marginBottom: '20px' }}>
+          This form is designed to handle idempotent requests. It will prevent duplicate submissions by using a unique idempotency key.
+        </Text>
+        <form onSubmit={form.onSubmit(handleSubmit)}>
+          <Stack>
+            <Group justify="space-between" align="center">
+              <Text size="xl" fw={700}>Idempotent Form</Text>
+              <Group>
+                <Switch
+                  label="Idempotent Mode"
+                  checked={isIdempotent}
+                  onChange={(event) => setIsIdempotent(event.currentTarget.checked)}
+                  color="blue"
+                />
+                <Badge color="blue" size="lg">
+                  Cache Size: {cacheSize}
+                </Badge>
+                <Button 
+                  variant="light" 
+                  color="red" 
+                  onClick={handleClearCache}
+                  disabled={cacheSize === 0}
+                >
+                  Clear Cache
+                </Button>
+              </Group>
             </Group>
-          </Group>
-          
-          {error && (
-            <Alert color="red" title="Error" withCloseButton onClose={() => setError(null)}>
-              {error}
-            </Alert>
-          )}
 
-          {success && (
-            <Alert color="green" title="Success" withCloseButton onClose={() => setSuccess(false)}>
-              Form submitted successfully!
-            </Alert>
-          )}
+            <TextInput
+              label="Name"
+              placeholder="Enter your name"
+              {...form.getInputProps('name')}
+            />
 
-          <TextInput
-            label="Name"
-            placeholder="Enter your name"
-            {...form.getInputProps('name')}
-          />
+            <TextInput
+              label="Email"
+              placeholder="Enter your email"
+              {...form.getInputProps('email')}
+            />
 
-          <TextInput
-            label="Email"
-            placeholder="Enter your email"
-            {...form.getInputProps('email')}
-          />
-
-          <Button 
-            type="submit" 
-            loading={isSubmitting}
-            disabled={isSubmitting}
-          >
-            Submit
-          </Button>
-        </Stack>
-      </form>
-    </Paper>
+            <Button 
+              type="submit" 
+              loading={isSubmitting}
+              disabled={isSubmitting}
+            >
+              Submit
+            </Button>
+          </Stack>
+        </form>
+        {lastResponse && (
+          <div style={{ marginTop: '20px', textAlign: 'left', fontSize: '12px' }}>
+            <Text>Last Response:</Text>
+            <pre>{JSON.stringify(lastResponse, null, 2)}</pre>
+          </div>
+        )}
+      </Paper>
+    </>
   )
 }
 
