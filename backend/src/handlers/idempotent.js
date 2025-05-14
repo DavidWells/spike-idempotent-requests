@@ -14,13 +14,34 @@ const persistenceStore = new DynamoDBPersistenceLayer({
   expiryAttr: 'expiration',
 })
 
+function responseHook(response, record) {
+  console.log('responseHook response')
+  console.log(response)
+  console.log('responseHook record')
+  console.log(record)
+  // Return inserted Header data into the Idempotent Response
+  // response.headers = {
+  //   'x-idempotency-key': record.idempotencyKey
+  // }
+
+  const currentBody = JSON.parse(response.body)
+  const newBody = JSON.stringify(Object.assign({}, currentBody, {
+    serverCacheHit: true
+  }))
+
+  response.body = newBody
+  // Must return the response here
+  return response
+}
+
 const idempotencyConfig = new IdempotencyConfig({
   eventKeyJmesPath: 'headers."idempotency-key"',
   expiresAfterSeconds: 24 * 60 * 60, // 24 hours
   throwOnNoIdempotencyKey: true,
   useLocalCache: true,
   maxLocalCacheSize: 512,
-});
+  responseHook,
+})
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,23 +51,13 @@ const corsHeaders = {
 
 /**
  * Lambda handler for idempotent requests
- * @param {object} event
- * @returns {object}
+ * @param {import('aws-lambda').APIGatewayProxyEvent} event - The request event
+ * @returns {Promise<Response>} The response
  */
 export const handler = makeIdempotent(
   async (event) => {
     try {
       logger.info('Processing request', { event })
-
-      // Handle OPTIONS request for CORS preflight
-      if (event.httpMethod === 'OPTIONS') {
-        return {
-          statusCode: 200,
-          headers: corsHeaders,
-          body: ''
-        }
-      }
-
       // Check for idempotency key
       const idempotencyKey = event.headers?.['Idempotency-Key'] || event.headers?.['idempotency-key']
       if (!idempotencyKey) {
@@ -57,16 +68,13 @@ export const handler = makeIdempotent(
         }
       }
 
-      // Simulate business logic
-      const response = JSON.stringify({ 
-        message: 'Processed', 
-        requestId: idempotencyKey
-      })
-
       return {
         statusCode: 200,
         headers: corsHeaders,
-        body: response
+        body: JSON.stringify({ 
+          message: 'Processed', 
+          requestId: idempotencyKey
+        })
       }
     } catch (err) {
       logger.error('Handler error', { error: err })
