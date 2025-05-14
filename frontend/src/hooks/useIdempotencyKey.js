@@ -3,6 +3,9 @@
  * @returns {Object} Key generation utilities
  */
 export function useIdempotencyKey() {
+  let counter = 0
+  let lastTimestamp = 0
+
   /**
    * Simple string hash function
    * @param {string} str - String to hash
@@ -27,8 +30,17 @@ export function useIdempotencyKey() {
     console.log('Generating idempotency key for data:', data)
     const hash = simpleHash(data)
     const timestamp = Date.now()
+    
+    // If we're in the same millisecond, increment counter
+    if (timestamp === lastTimestamp) {
+      counter++
+    } else {
+      counter = 0
+      lastTimestamp = timestamp
+    }
+    
     const negativeHash = -Math.abs(hash)
-    return `req_${negativeHash}_${timestamp}`
+    return `req_${negativeHash}_${timestamp}_${counter}`
   }
 
   return { generateKey }

@@ -30,7 +30,11 @@ export const getCachedResponse = (key) => {
       decrementCacheCount()
       return null
     }
-    return response
+    // Return the full response object including the timestamp
+    return {
+      ...response,
+      timestamp: new Date(timestamp).toISOString()
+    }
   } catch (error) {
     console.error('Error parsing cached response:', error)
     return null
@@ -114,7 +118,8 @@ export const makeNormalRequest = async (url, data, options = {}) => {
 
   const responseData = await response.json()
   return Object.assign({}, responseData, {
-    isCached: false
+    isCached: false,
+    timestamp: new Date().toISOString()
   })
 }
 
@@ -123,9 +128,7 @@ export const makeIdempotentRequest = async (url, data, options = {}) => {
   const cachedResponse = getCachedResponse(idempotencyKey)
   
   if (cachedResponse) {
-    return Object.assign({}, cachedResponse, {
-      isCached: true
-    })
+    return Object.assign({}, { isCached: true }, cachedResponse)
   }
 
   const response = await fetch(url, {
@@ -144,9 +147,10 @@ export const makeIdempotentRequest = async (url, data, options = {}) => {
   }
 
   const responseData = await response.json()
-  cacheResponse(idempotencyKey, responseData)
-  
-  return Object.assign({}, responseData, {
-    isCached: false
+  const responseWithTimestamp = Object.assign({}, responseData, {
+    timestamp: new Date().toISOString()
   })
+  cacheResponse(idempotencyKey, responseWithTimestamp)
+  
+  return Object.assign({}, { isCached: false }, responseWithTimestamp)
 } 

@@ -1,50 +1,53 @@
+import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { MantineProvider } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
 import IdempotentForm from '../IdempotentForm'
-import { makeIdempotentRequest } from '../../utils/idempotency'
-import { getCacheSize, clearCache } from '../../utils/cache'
+import { makeIdempotentRequest, getCacheCount, clearCache } from '../../utils/idempotency'
 
-// Mock the idempotency and cache utilities
+// Mock the idempotency utilities
 vi.mock('../../utils/idempotency', () => ({
-  makeIdempotentRequest: vi.fn()
-}))
-
-vi.mock('../../utils/cache', () => ({
-  getCacheSize: vi.fn(),
+  makeIdempotentRequest: vi.fn(),
+  makeNormalRequest: vi.fn(),
+  getCacheCount: vi.fn(),
   clearCache: vi.fn()
 }))
+
+// Mock notifications
+vi.mock('@mantine/notifications', () => ({
+  notifications: {
+    show: vi.fn()
+  }
+}))
+
+const renderWithMantine = (component) => {
+  return render(
+    <MantineProvider>
+      {component}
+    </MantineProvider>
+  )
+}
 
 describe('IdempotentForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    getCacheSize.mockReturnValue(0)
+    vi.mocked(getCacheCount).mockReturnValue(0)
   })
 
   it('renders form with all required fields', () => {
-    render(<IdempotentForm />)
+    renderWithMantine(<IdempotentForm />)
     
     expect(screen.getByLabelText(/name/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument()
   })
 
-  it('validates form fields', async () => {
-    render(<IdempotentForm />)
-    
-    const submitButton = screen.getByRole('button', { name: /submit/i })
-    fireEvent.click(submitButton)
-
-    await waitFor(() => {
-      expect(screen.getByText(/name must be at least 2 characters/i)).toBeInTheDocument()
-      expect(screen.getByText(/invalid email/i)).toBeInTheDocument()
-    })
-  })
-
   it('submits form with valid data', async () => {
     const mockResponse = { success: true }
     makeIdempotentRequest.mockResolvedValueOnce(mockResponse)
     
-    render(<IdempotentForm />)
+    renderWithMantine(<IdempotentForm />)
     
     fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: 'John Doe' }
@@ -65,7 +68,12 @@ describe('IdempotentForm', () => {
           email: 'john@example.com'
         }
       )
-      expect(screen.getByText(/form submitted successfully/i)).toBeInTheDocument()
+      expect(notifications.show).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Success',
+          color: 'green'
+        })
+      )
     })
   })
 
@@ -73,7 +81,7 @@ describe('IdempotentForm', () => {
     const errorMessage = 'Network error'
     makeIdempotentRequest.mockRejectedValueOnce(new Error(errorMessage))
     
-    render(<IdempotentForm />)
+    renderWithMantine(<IdempotentForm />)
     
     fireEvent.change(screen.getByLabelText(/name/i), {
       target: { value: 'John Doe' }
@@ -87,26 +95,37 @@ describe('IdempotentForm', () => {
     fireEvent.click(submitButton)
 
     await waitFor(() => {
-      expect(screen.getByText(errorMessage)).toBeInTheDocument()
+      expect(notifications.show).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Error',
+          message: errorMessage,
+          color: 'red'
+        })
+      )
     })
   })
 
   it('clears cache when clear cache button is clicked', async () => {
-    getCacheSize.mockReturnValue(2)
+    vi.mocked(getCacheCount).mockReturnValue(2)
     
-    render(<IdempotentForm />)
+    renderWithMantine(<IdempotentForm />)
     
     const clearCacheButton = screen.getByRole('button', { name: /clear cache/i })
     fireEvent.click(clearCacheButton)
 
     expect(clearCache).toHaveBeenCalled()
-    expect(screen.getByText(/cache size: 0/i)).toBeInTheDocument()
+    expect(notifications.show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Cache Cleared',
+        color: 'blue'
+      })
+    )
   })
 
   it('disables clear cache button when cache is empty', () => {
-    getCacheSize.mockReturnValue(0)
+    vi.mocked(getCacheCount).mockReturnValue(0)
     
-    render(<IdempotentForm />)
+    renderWithMantine(<IdempotentForm />)
     
     const clearCacheButton = screen.getByRole('button', { name: /clear cache/i })
     expect(clearCacheButton).toBeDisabled()

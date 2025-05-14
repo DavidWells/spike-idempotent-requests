@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run --environment jsdom",
     "test:watch": "vitest --watch --environment jsdom",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "deploy": "npm run build && netlify deploy --prod --dir=dist --site ee7571e1-1a9e-4125-8d44-4957edd41463"
   },
   "dependencies": {
     "@mantine/core": "^8.0.0",

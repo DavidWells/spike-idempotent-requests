@@ -13,16 +13,16 @@ describe('useIdempotencyKey', () => {
   it('generates consistent keys for same input', () => {
     const key1 = hook.generateKey('test')
     const key2 = hook.generateKey('test')
-    // Keys should be different due to timestamp
-    const timestamp1 = key1.split('_')[2]
-    const timestamp2 = key2.split('_')[2]
-    expect(timestamp1).not.toBe(timestamp2)
+    // Keys should be different due to timestamp and counter
+    const parts1 = key1.split('_')
+    const parts2 = key2.split('_')
+    expect(parts1[2] + '_' + parts1[3]).not.toBe(parts2[2] + '_' + parts2[3])
     // But should have same hash prefix
-    expect(key1.split('_')[1]).toBe(key2.split('_')[1])
+    expect(parts1[1]).toBe(parts2[1])
   })
 
   it('generates keys with correct format', () => {
     const key = hook.generateKey('test')
-    expect(key).toMatch(/^req_-\d+_\d+$/)
+    expect(key).toMatch(/^req_-\d+_\d+_\d+$/)
   })
 }) 

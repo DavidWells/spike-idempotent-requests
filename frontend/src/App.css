@@ -5,6 +5,17 @@
   text-align: center;
 }
 
+
+body {
+  background-color: #f8f9fa;
+  background-image: 
+    radial-gradient(circle at 100% 100%, #e9ecef 0, transparent 0.5rem),
+    radial-gradient(circle at 0% 0%, #e9ecef 0, transparent 0.5rem);
+  background-size: 1rem 1rem;
+  background-position: 0 0, 0.5rem 0.5rem;
+  min-height: 100vh;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -39,4 +50,11 @@
 
 .read-the-docs {
   color: #888;
+}
+
+@media (max-width: 768px) {
+  #root {
+    padding: 10px;
+    margin: 0;
+  }
 }

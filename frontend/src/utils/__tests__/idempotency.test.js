@@ -23,7 +23,10 @@ Object.defineProperty(window, 'localStorage', {
 })
 
 // Mock fetch
-global.fetch = vi.fn()
+const mockFetch = vi.fn()
+Object.defineProperty(window, 'fetch', {
+  value: mockFetch
+})
 
 describe('Idempotency Utilities', () => {
   beforeEach(() => {
@@ -33,13 +36,13 @@ describe('Idempotency Utilities', () => {
 
   describe('generateIdempotencyKey', () => {
     it('generates a key with the correct prefix', () => {
-      const key = generateIdempotencyKey()
+      const key = generateIdempotencyKey({ name: 'test', email: 'test@test.com' })
       expect(key).toMatch(/^idempotency_/)
     })
 
     it('generates unique keys', () => {
-      const key1 = generateIdempotencyKey()
-      const key2 = generateIdempotencyKey()
+      const key1 = generateIdempotencyKey({ name: 'test', email: 'test@test.com' })
+      const key2 = generateIdempotencyKey({ name: 'test', email: 'test@2test.com' })
       expect(key1).not.toBe(key2)
     })
   })
@@ -95,11 +98,11 @@ describe('Idempotency Utilities', () => {
         ok: true,
         json: () => mockJsonResponse
       }
-      global.fetch.mockResolvedValueOnce(mockFetchResponse)
+      mockFetch.mockResolvedValueOnce(mockFetchResponse)
 
       const result = await makeIdempotentRequest('/api/test', { test: 'data' })
 
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(mockFetch).toHaveBeenCalledWith(
         '/api/test',
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -109,7 +112,7 @@ describe('Idempotency Utilities', () => {
           body: JSON.stringify({ test: 'data' })
         })
       )
-      expect(result).toEqual(mockResponse)
+      expect(result).toEqual({ ...mockResponse, isCached: false })
     })
 
     it('returns cached response when available', async () => {
@@ -118,20 +121,22 @@ describe('Idempotency Utilities', () => {
         response: mockResponse,
         timestamp: Date.now()
       }
-      localStorageMock.setItem('test_key', JSON.stringify(mockData))
+      const idempotencyKey = generateIdempotencyKey({ test: 'data' })
+      localStorageMock.setItem(idempotencyKey, JSON.stringify(mockData))
 
       const result = await makeIdempotentRequest('/api/test', { test: 'data' })
 
-      expect(global.fetch).not.toHaveBeenCalled()
-      expect(result).toEqual(mockResponse)
+      expect(mockFetch).not.toHaveBeenCalled()
+      expect(result).toEqual({ ...mockResponse, isCached: true })
     })
 
     it('throws error for failed requests', async () => {
       const mockFetchResponse = {
         ok: false,
-        status: 500
+        status: 500,
+        json: () => Promise.resolve({ error: 'Internal Server Error' })
       }
-      global.fetch.mockResolvedValueOnce(mockFetchResponse)
+      mockFetch.mockResolvedValueOnce(mockFetchResponse)
 
       await expect(makeIdempotentRequest('/api/test', { test: 'data' }))
         .rejects
