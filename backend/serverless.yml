@@ -4,8 +4,10 @@ frameworkVersion: '3'
 
 provider:
   name: aws
+  stage: ${opt:stage, 'prod'}
   runtime: nodejs22.x
   region: us-west-1
+  logRetentionInDays: 14
   environment:
     IDEMPOTENCY_TABLE: ${self:service}-${sls:stage}-idempotency
     LOG_LEVEL: ${opt:logLevel, 'info'}
@@ -28,11 +30,35 @@ functions:
       - http:
           path: /api/idempotent
           method: post
-          cors: true
-    environment:
-      LOG_LEVEL: ${opt:logLevel, 'info'}
-    logRetentionInDays: 14
-
+          cors:
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amzn-Trace-Id
+              - Idempotency-Key
+              - idempotency-key
+  middy:
+    handler: src/handlers/middy.handler
+    events:
+      - http:
+          path: /api/middy
+          method: post
+          cors:
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amzn-Trace-Id
+              - Idempotency-Key
+              - idempotency-key
+              
 resources:
   Resources:
     IdempotencyTable:
@@ -47,7 +73,7 @@ resources:
           - AttributeName: id
             KeyType: HASH
         TimeToLiveSpecification:
-          AttributeName: ttl
+          AttributeName: expiration
           Enabled: true
     # Shut Cors all the way up
     GatewayResponse:
