@@ -1,35 +1,106 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { handler } from '../../src/handlers/idempotent.js'
-import { Logger } from '@aws-lambda-powertools/logger'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
 
+// Mock AWS SDK
+vi.mock('@aws-sdk/client-dynamodb', () => ({
+  DynamoDBClient: vi.fn().mockImplementation(() => ({
+    send: vi.fn().mockResolvedValue({})
+  }))
+}))
+
+vi.mock('@aws-sdk/lib-dynamodb', () => ({
+  DynamoDBDocumentClient: {
+    from: vi.fn().mockImplementation(() => ({
+      send: vi.fn().mockResolvedValue({})
+    }))
+  }
+}))
+
+// Mock the logger
 vi.mock('@aws-lambda-powertools/logger', () => ({
   Logger: vi.fn().mockImplementation(() => ({
     info: vi.fn(),
-    warn: vi.fn(),
+    error: vi.fn(),
     debug: vi.fn()
   }))
 }))
 
-vi.mock('@aws-lambda-powertools/idempotency', () => ({
-  makeIdempotent: vi.fn((handler) => handler)
-}))
+// Mock the idempotency module
+vi.mock('@aws-lambda-powertools/idempotency', () => {
+  return {
+    makeIdempotent: vi.fn().mockImplementation((handler) => handler),
+    IdempotencyConfig: vi.fn().mockImplementation(() => ({
+      eventKeyJmesPath: 'headers."idempotency-key"',
+      expiresAfterSeconds: 24 * 60 * 60
+    })),
+    IdempotencyHandler: vi.fn().mockImplementation(() => ({
+      process: vi.fn().mockImplementation(async (handler) => {
+        return handler()
+      })
+    }))
+  }
+})
 
-vi.mock('@aws-lambda-powertools/idempotency/dynamodb', () => ({
-  DynamoDBPersistenceLayer: vi.fn().mockImplementation(() => ({}))
-}))
-
-describe('Lambda Idempotency Integration', () => {
-  const key = '123e4567-e89b-42d3-a456-426614174000'
-  const event = { headers: { 'Idempotency-Key': key } }
-
+describe('Idempotency Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    process.env.IDEMPOTENCY_TABLE = 'test-table'
   })
 
-  it('should process request and return response', async () => {
-    const res = await handler(event)
-    expect(res.statusCode).toBe(200)
-    expect(JSON.parse(res.body).message).toBe('Processed')
-    expect(JSON.parse(res.body).requestId).toBe(key)
+  it('should handle duplicate requests with same idempotency key', async () => {
+    const { handler } = await import('../../src/handlers/idempotent.js')
+    const event = {
+      headers: {
+        'idempotency-key': 'test-key'
+      },
+      body: JSON.stringify({ test: true })
+    }
+
+    // First request
+    const response1 = await handler(event)
+    expect(response1.statusCode).toBe(200)
+    expect(JSON.parse(response1.body)).toEqual({ 
+      message: 'Processed',
+      requestId: 'test-key'
+    })
+
+    // Second request with same key
+    const response2 = await handler(event)
+    expect(response2.statusCode).toBe(200)
+    expect(JSON.parse(response2.body)).toEqual({ 
+      message: 'Processed',
+      requestId: 'test-key'
+    })
+  })
+
+  it('should handle different requests with different idempotency keys', async () => {
+    const { handler } = await import('../../src/handlers/idempotent.js')
+    
+    // First request
+    const response1 = await handler({
+      headers: {
+        'idempotency-key': 'key-1'
+      },
+      body: JSON.stringify({ test: true })
+    })
+    expect(response1.statusCode).toBe(200)
+    expect(JSON.parse(response1.body)).toEqual({ 
+      message: 'Processed',
+      requestId: 'key-1'
+    })
+
+    // Second request with different key
+    const response2 = await handler({
+      headers: {
+        'idempotency-key': 'key-2'
+      },
+      body: JSON.stringify({ test: true })
+    })
+    expect(response2.statusCode).toBe(200)
+    expect(JSON.parse(response2.body)).toEqual({ 
+      message: 'Processed',
+      requestId: 'key-2'
+    })
   })
 }) 

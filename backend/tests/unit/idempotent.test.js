@@ -1,37 +1,63 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { handler } from '../../src/handlers/idempotent.js'
-import { Logger } from '@aws-lambda-powertools/logger'
 
+// Mock the idempotency module
+vi.mock('@aws-lambda-powertools/idempotency', () => {
+  return {
+    makeIdempotent: vi.fn().mockImplementation((handler) => handler),
+    IdempotencyConfig: vi.fn().mockImplementation(() => ({
+      eventKeyJmesPath: 'headers."idempotency-key"',
+      expiresAfterSeconds: 24 * 60 * 60
+    })),
+    IdempotencyHandler: vi.fn().mockImplementation(() => ({
+      process: vi.fn().mockImplementation(async (handler) => {
+        return handler()
+      })
+    }))
+  }
+})
+
+// Mock the logger
 vi.mock('@aws-lambda-powertools/logger', () => ({
   Logger: vi.fn().mockImplementation(() => ({
     info: vi.fn(),
-    warn: vi.fn(),
+    error: vi.fn(),
     debug: vi.fn()
   }))
 }))
 
-vi.mock('@aws-lambda-powertools/idempotency', () => ({
-  makeIdempotent: vi.fn((handler) => handler)
-}))
-
-vi.mock('@aws-lambda-powertools/idempotency/dynamodb', () => ({
-  DynamoDBPersistenceLayer: vi.fn().mockImplementation(() => ({}))
-}))
-
-describe('Idempotent Lambda Handler', () => {
+describe('Idempotent Handler', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('should process request and return response', async () => {
-    const event = { 
-      headers: { 
-        'Idempotency-Key': '123e4567-e89b-42d3-a456-426614174000' 
-      } 
+  it('should process requests with idempotency', async () => {
+    const { handler } = await import('../../src/handlers/idempotent.js')
+    const event = {
+      headers: {
+        'idempotency-key': 'test-key'
+      },
+      body: JSON.stringify({ test: true })
     }
-    const res = await handler(event)
-    expect(res.statusCode).toBe(200)
-    expect(JSON.parse(res.body).message).toBe('Processed')
-    expect(JSON.parse(res.body).requestId).toBe(event.headers['Idempotency-Key'])
+
+    const response = await handler(event)
+    expect(response.statusCode).toBe(200)
+    expect(JSON.parse(response.body)).toEqual({ 
+      message: 'Processed',
+      requestId: 'test-key'
+    })
+  })
+
+  it('should handle missing idempotency key', async () => {
+    const { handler } = await import('../../src/handlers/idempotent.js')
+    const event = {
+      headers: {},
+      body: JSON.stringify({ test: true })
+    }
+
+    const response = await handler(event)
+    expect(response.statusCode).toBe(400)
+    expect(JSON.parse(response.body)).toEqual({
+      error: 'Idempotency key is required'
+    })
   })
 }) 

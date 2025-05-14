@@ -47,10 +47,20 @@ export const handler = makeIdempotent(
         }
       }
 
+      // Check for idempotency key
+      const idempotencyKey = event.headers?.['Idempotency-Key'] || event.headers?.['idempotency-key']
+      if (!idempotencyKey) {
+        return {
+          statusCode: 400,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: 'Idempotency key is required' })
+        }
+      }
+
       // Simulate business logic
       const response = JSON.stringify({ 
         message: 'Processed', 
-        requestId: event.headers?.['Idempotency-Key'] || event.headers?.['idempotency-key']
+        requestId: idempotencyKey
       })
 
       return {
@@ -60,6 +70,16 @@ export const handler = makeIdempotent(
       }
     } catch (err) {
       logger.error('Handler error', { error: err })
+      
+      // Handle missing idempotency key error
+      if (err.message?.includes('No idempotency key found')) {
+        return {
+          statusCode: 400,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: 'Idempotency key is required' })
+        }
+      }
+
       return {
         statusCode: 500,
         headers: corsHeaders,

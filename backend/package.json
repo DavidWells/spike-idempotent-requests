@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run test:backend",
-    "test:backend": "pnpm exec vitest run backend/tests/unit backend/tests/integration",
+    "test:backend": "cross-env IDEMPOTENCY_TABLE=test-idempotency-table pnpm exec vitest run tests/unit tests/integration",
     "deploy": "sls deploy --stage prod"
   },
   "keywords": [],
@@ -14,6 +14,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.11.0",
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "osls": "^3.51.0",
     "vitest": "^3.1.3"
   },
