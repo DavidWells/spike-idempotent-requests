@@ -2,6 +2,9 @@ service: idempotent-requests-demo
 
 frameworkVersion: '3'
 
+plugins:
+  - serverless-manifest-plugin
+
 provider:
   name: aws
   stage: ${opt:stage, 'prod'}
@@ -12,6 +15,7 @@ provider:
     IDEMPOTENCY_TABLE: ${self:service}-${sls:stage}-idempotency
     LOG_LEVEL: ${opt:logLevel, 'info'}
     NODE_OPTIONS: --enable-source-maps
+    CACHE_TIME_IN_SECONDS: 3600
   iam:
     role:
       statements:
@@ -41,6 +45,9 @@ functions:
               - X-Amzn-Trace-Id
               - Idempotency-Key
               - idempotency-key
+              - ETag
+              - Cache-Control
+              - Vary
   middy:
     handler: src/handlers/middy.handler
     events:
@@ -58,6 +65,9 @@ functions:
               - X-Amzn-Trace-Id
               - Idempotency-Key
               - idempotency-key
+              - ETag
+              - Cache-Control
+              - Vary
               
 resources:
   Resources:

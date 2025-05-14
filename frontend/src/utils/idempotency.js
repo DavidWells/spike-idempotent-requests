@@ -24,8 +24,9 @@ export const getCachedResponse = (key) => {
   
   try {
     const { response, timestamp } = JSON.parse(cachedData)
+    const HOURS_TO_EXPIRE = 24
     // Cache expires after 24 hours
-    if (Date.now() - timestamp > 24 * 60 * 60 * 1000) {
+    if (Date.now() - timestamp > HOURS_TO_EXPIRE * 60 * 60 * 1000) {
       localStorage.removeItem(key)
       decrementCacheCount()
       return null
@@ -117,10 +118,10 @@ export const makeNormalRequest = async (url, data, options = {}) => {
   }
 
   const responseData = await response.json()
-  return Object.assign({}, responseData, {
-    isCached: false,
+  const responseWithTimestamp = Object.assign({}, responseData, {
     timestamp: new Date().toISOString()
   })
+  return Object.assign({}, { isCached: false }, responseWithTimestamp)
 }
 
 export const makeIdempotentRequest = async (url, data, options = {}) => {

@@ -67,7 +67,7 @@ function IdempotentForm({ onRequestComplete }) {
       console.log('Form submitted successfully:', response)
       setLastResponse(response)
       setSuccess(true)
-      form.reset()
+      //form.reset()
 
       // Call onRequestComplete with the response and form values
       onRequestComplete?.(response, values)

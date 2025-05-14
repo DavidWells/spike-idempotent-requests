@@ -49,3 +49,7 @@ Examples:
 - pnpm dlx shadcn@latest add table accordion tabs separator
 - pnpm --package=typescript dlx tsc --init
 - pnpm create cloudflare@latest . --framework=next --platform=pages
+
+## NEVER
+
+Never change the runtime in serverless.yml files

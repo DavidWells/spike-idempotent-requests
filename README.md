@@ -26,14 +26,11 @@ A demonstration project showcasing how to implement idempotent requests in AWS L
 
 1. Install dependencies:
 
-```bash
-# Install backend dependencies
-cd backend
-pnpm install
+In the root dir run:
 
-# Install frontend dependencies
-cd ../frontend
-pnpm install
+```bash
+# Install dependencies
+npm run setup
 ```
 
 2. Configure AWS credentials:
@@ -88,7 +85,7 @@ pnpm run dev
 The project uses:
 - AWS Lambda for serverless functions
 - DynamoDB for idempotency state management
-- AWS Lambda Powertools for idempotency and logging
+- `@aws-lambda-powertools/idempotency` for idempotency
 - React for the frontend interface
 
 ## License
