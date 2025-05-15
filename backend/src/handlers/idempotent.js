@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { makeIdempotent, IdempotencyConfig } from '@aws-lambda-powertools/idempotency';
 import { DynamoDBPersistenceLayer } from '@aws-lambda-powertools/idempotency/dynamodb'
 import { Logger } from '@aws-lambda-powertools/logger'
@@ -14,6 +15,27 @@ const persistenceStore = new DynamoDBPersistenceLayer({
   expiryAttr: 'expiration',
 })
 
+// Helper function to generate ETag from response body
+function generateETag(responseBody) {
+  return `"${createHash('md5').update(responseBody).digest('hex')}"`
+}
+
+// Add cache headers to the response
+function addCacheHeaders(response, etag) {
+  // Get cache TTL from env or use default (3600 seconds = 1 hour)
+  const cacheTtl = process.env.CACHE_TIME_IN_SECONDS || 3600
+  
+  // Create new headers object - don't mutate corsHeaders directly
+  response.headers = {
+    ...response.headers,
+    'ETag': etag,
+    'Cache-Control': `max-age=${cacheTtl}`,
+    'Vary': 'Accept-Encoding, Accept'
+  }
+  
+  return response
+}
+
 function responseHook(response, record) {
   console.log('responseHook response')
   console.log(response)
@@ -24,19 +46,28 @@ function responseHook(response, record) {
   //   'x-idempotency-key': record.idempotencyKey
   // }
 
+  // Parse the current body
   const currentBody = JSON.parse(response.body)
+  
+  // Add serverCacheHit flag to indicate this is from the idempotency cache
   const newBody = JSON.stringify(Object.assign({}, currentBody, {
     serverCacheHit: true
   }))
-
+  
+  // Generate ETag from the new response body
+  // const etag = record.responseData.headers.etag || generateETag(currentBody)
+  
+  // Update the response body
   response.body = newBody
-  // Must return the response here
+  
+  
+  // Return modified response
   return response
 }
 
 const idempotencyConfig = new IdempotencyConfig({
   eventKeyJmesPath: 'headers."idempotency-key"',
-  expiresAfterSeconds: 24 * 60 * 60, // 24 hours
+  expiresAfterSeconds: parseInt(process.env.CACHE_TIME_IN_SECONDS), // 24 * 60 * 60, // 24 hours
   throwOnNoIdempotencyKey: true,
   useLocalCache: true,
   maxLocalCacheSize: 512,
@@ -58,6 +89,7 @@ export const handler = makeIdempotent(
   async (event) => {
     try {
       logger.info('Processing request', { event })
+      
       // Check for idempotency key
       const idempotencyKey = event.headers?.['Idempotency-Key'] || event.headers?.['idempotency-key']
       if (!idempotencyKey) {
@@ -67,15 +99,36 @@ export const handler = makeIdempotent(
           body: JSON.stringify({ error: 'Idempotency key is required' })
         }
       }
-
-      return {
+      
+      // Check if the request includes an If-None-Match header
+      const ifNoneMatch = event.headers?.['If-None-Match'] || event.headers?.['if-none-match']
+      
+      // Create the response body
+      const responseBody = JSON.stringify({ 
+        message: 'Processed', 
+        requestId: idempotencyKey
+      })
+      
+      // Generate an ETag for this response
+      const etag = generateETag(responseBody)
+      console.log('etag', etag)
+      
+      // If client sent If-None-Match header that matches our ETag, return 304
+      if (ifNoneMatch && ifNoneMatch === etag) {
+        logger.info('ETag match - returning 304', { etag, ifNoneMatch })
+        return {
+          statusCode: 304, // Not Modified
+          headers: addCacheHeaders({ headers: corsHeaders }, etag)
+        }
+      }
+      
+      // Otherwise, return full response with ETag
+      logger.info('Returning full response with ETag', { etag })
+      return addCacheHeaders({
         statusCode: 200,
         headers: corsHeaders,
-        body: JSON.stringify({ 
-          message: 'Processed', 
-          requestId: idempotencyKey
-        })
-      }
+        body: responseBody
+      }, etag)
     } catch (err) {
       logger.error('Handler error', { error: err })
       
@@ -99,4 +152,4 @@ export const handler = makeIdempotent(
     persistenceStore,
     config: idempotencyConfig
   }
-) 
+)

@@ -11,6 +11,7 @@ public/data
 .serverless
 # remote content
 sources
+responses
 
 # testing
 /coverage
