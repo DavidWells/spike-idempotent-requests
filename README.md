@@ -70,6 +70,15 @@ cd src/frontend
 pnpm run dev
 ```
 
+Make sure to deploy the backend first to setup the API endpoint.
+
+Pull in the api endpoint automatically with
+
+```bash
+cd src/frontend
+npm run sync
+```
+
 ## Key Features
 
 - Idempotent request handling using AWS Lambda Powertools
@@ -84,7 +93,7 @@ The project uses:
 - AWS Lambda for serverless functions
 - DynamoDB for idempotency state management
 - `@aws-lambda-powertools/idempotency` for idempotency
-- React for the frontend interface
+- React + vite for the frontend interface
 
 ## License
 
