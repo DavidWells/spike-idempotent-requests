@@ -6,13 +6,11 @@ A demonstration project showcasing how to implement idempotent requests in AWS L
 
 ```
 .
-├── backend/           # AWS Lambda functions and infrastructure
-│   ├── src/          # Lambda function source code
-│   ├── tests/        # Unit and integration tests
-│   └── package.json  # Backend dependencies
-└── frontend/         # React frontend application
-    ├── src/          # React source code
-    └── package.json  # Frontend dependencies
+├── src/              # Source code for both frontend and backend
+│   ├── backend/      # AWS Lambda functions and infrastructure
+│   └── frontend/     # React frontend application
+├── scripts/          # Utility scripts
+└── docs/             # Project documentation
 ```
 
 ## Prerequisites
@@ -40,7 +38,7 @@ npm run setup
 3. Deploy the backend:
 
 ```bash
-cd backend
+cd src/backend
 pnpm run deploy
 ```
 
@@ -57,7 +55,7 @@ The backend consists of AWS Lambda functions that demonstrate idempotent request
 To run tests:
 
 ```bash
-cd backend
+cd src/backend
 pnpm run test
 ```
 
@@ -68,7 +66,7 @@ The frontend is a React application that demonstrates how to interact with the i
 To start the development server:
 
 ```bash
-cd frontend
+cd src/frontend
 pnpm run dev
 ```
 
