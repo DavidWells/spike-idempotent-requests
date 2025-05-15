@@ -6,8 +6,9 @@ import { makeIdempotentRequest, makeNormalRequest, getCacheCount, clearCache } f
 import { notifications } from '@mantine/notifications'
 import { useViewportSize } from '@mantine/hooks'
 
-const API_ENDPOINT = 'https://esmozxw7u4.execute-api.us-west-1.amazonaws.com/prod/api/idempotent'
-
+// Use environment variable with fallback for development
+const API_ENDPOINT_BASE = import.meta.env.VITE_API_ENDPOINT || 'http://localhost:3000/api/idempotent'
+const API_ENDPOINT = API_ENDPOINT_BASE + '/api/idempotent'
 /**
  * IdempotentForm Component
  * 

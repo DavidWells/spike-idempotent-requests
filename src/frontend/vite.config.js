@@ -15,5 +15,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setupTests.js']
-  }
+  },
+  // Load environment variables from .env files
+  envDir: '.',
+  envPrefix: 'VITE_'
 })

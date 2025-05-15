@@ -4,6 +4,8 @@ frameworkVersion: '3'
 
 plugins:
   - serverless-manifest-plugin
+  # automatically injects the API_URL into the frontend environment
+  - ./plugin.cjs
 
 provider:
   name: aws

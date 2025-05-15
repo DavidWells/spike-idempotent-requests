@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "sync": "echo \"Syncing backend API URL to frontend...\" && cd ../backend && sls envsync && cd ../frontend",
+    "build": "vite build --mode production",
+    "serve": "vite preview",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "vitest run --environment jsdom",
