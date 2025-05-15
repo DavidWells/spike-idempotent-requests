@@ -49,7 +49,7 @@ describe('Idempotency Integration', () => {
   })
 
   it('should handle duplicate requests with same idempotency key', async () => {
-    const { handler } = await import('../../src/handlers/idempotent.js')
+    const { handler } = await import('../../src/idempotent.js')
     const event = {
       headers: {
         'idempotency-key': 'test-key'
@@ -75,7 +75,7 @@ describe('Idempotency Integration', () => {
   })
 
   it('should handle different requests with different idempotency keys', async () => {
-    const { handler } = await import('../../src/handlers/idempotent.js')
+    const { handler } = await import('../../src/idempotent.js')
     
     // First request
     const response1 = await handler({

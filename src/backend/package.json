@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "main": "index.js",
   "scripts": {
     "test": "npm run test:backend",
-    "test:backend": "IDEMPOTENCY_TABLE=test-idempotency-table pnpm exec vitest run tests/unit tests/integration",
+    "test:backend": "IDEMPOTENCY_TABLE=test-idempotency-table vitest run tests/unit tests/integration",
     "deploy": "./node_modules/.bin/sls deploy --stage prod"
   },
   "keywords": [],

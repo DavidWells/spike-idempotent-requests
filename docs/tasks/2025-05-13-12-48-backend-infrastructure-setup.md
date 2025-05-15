@@ -52,7 +52,7 @@ Use the `osls` fork of the serverless framework https://github.com/oss-serverles
 
 ## Commit 4: feat: Implement basic Lambda handler with idempotency middleware
 **Description:**
-- Create `/backend/src/handlers/idempotent.js` as the main Lambda handler.
+- Create `/backend/src/idempotent.js` as the main Lambda handler.
 - Integrate DynamoDB utility, logger, and idempotency utilities.
 - Add idempotency middleware logic (check key, store result, return cached response if duplicate).
 - Log all request/response events and idempotency checks.

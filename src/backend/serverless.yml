@@ -29,7 +29,7 @@ provider:
 
 functions:
   idempotent:
-    handler: src/handlers/idempotent.handler
+    handler: src/idempotent.handler
     events:
       - http:
           path: /api/idempotent
@@ -49,7 +49,7 @@ functions:
               - Cache-Control
               - Vary
   middy:
-    handler: src/handlers/middy.handler
+    handler: src/middy.handler
     events:
       - http:
           path: /api/middy

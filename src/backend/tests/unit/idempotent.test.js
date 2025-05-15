@@ -31,7 +31,7 @@ describe('Idempotent Handler', () => {
   })
 
   it('should process requests with idempotency', async () => {
-    const { handler } = await import('../../src/handlers/idempotent.js')
+    const { handler } = await import('../../src/idempotent.js')
     const event = {
       headers: {
         'idempotency-key': 'test-key'
@@ -48,7 +48,7 @@ describe('Idempotent Handler', () => {
   })
 
   it('should handle missing idempotency key', async () => {
-    const { handler } = await import('../../src/handlers/idempotent.js')
+    const { handler } = await import('../../src/idempotent.js')
     const event = {
       headers: {},
       body: JSON.stringify({ test: true })
