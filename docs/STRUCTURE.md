@@ -1,6 +1,6 @@
 # Project Structure
 
-This document outlines the recommended file structure for the Idempotent Requests Demo Application.
+This document outlines the file structure for the Idempotent Requests Demo Application.
 
 ## Root Directory Structure
 
@@ -8,68 +8,61 @@ This document outlines the recommended file structure for the Idempotent Request
 .
 ├── .cursor/                    # Cursor IDE configuration
 │   └── rules/                 # Project-specific rules
-├── .github/                   # GitHub configuration
-│   └── workflows/            # GitHub Actions workflows
-├── backend/                   # Backend application
-│   ├── src/                  # Source code
-│   │   ├── handlers/        # Lambda function handlers
-│   │   ├── lib/            # Shared utilities
-│   │   └── middleware/     # Custom middleware
-│   ├── tests/              # Backend tests
-│   └── serverless.yml      # Serverless Framework config
-├── frontend/                # Frontend application
-│   ├── src/               # Source code
-│   │   ├── components/   # React components
-│   │   ├── hooks/       # Custom React hooks
-│   │   ├── lib/        # Shared utilities
-│   │   └── pages/      # Page components
-│   ├── public/         # Static assets
-│   └── tests/         # Frontend tests
-├── docs/              # Documentation
-│   ├── diagrams/     # System diagrams
-│   └── api/         # API documentation
-└── scripts/         # Build and utility scripts
+├── .netlify/                  # Netlify configuration
+├── docs/                      # Documentation
+│   ├── diagrams/             # System diagrams
+│   └── api/                  # API documentation
+├── scripts/                   # Build and utility scripts
+├── src/                      # Source code
+│   ├── backend/             # Backend application
+│   │   ├── handlers/       # Lambda function handlers
+│   │   ├── lib/           # Shared utilities
+│   │   └── middleware/    # Custom middleware
+│   └── frontend/          # Frontend application
+│       ├── components/    # React components
+│       ├── hooks/        # Custom React hooks
+│       ├── lib/         # Shared utilities
+│       └── pages/       # Page components
+├── .gitignore              # Git ignore rules
+├── NOTES.md               # Development notes
+├── README.md             # Project overview and setup instructions
+└── package.json         # Project dependencies and scripts
 ```
 
 ## Backend Structure Details
 
-### `/backend/src/handlers/`
+### `/src/backend/handlers/`
 - `index.js` - Main Lambda handler
 - `idempotent.js` - Idempotency handler implementation
 - `errors.js` - Error handling utilities
 
-### `/backend/src/lib/`
+### `/src/backend/lib/`
 - `dynamodb.js` - DynamoDB client and utilities
 - `idempotency.js` - Idempotency key generation and validation
 - `logger.js` - Logging utilities
 
-### `/backend/src/middleware/`
+### `/src/backend/middleware/`
 - `idempotency.js` - Idempotency middleware
 - `error-handler.js` - Error handling middleware
 
-### `/backend/tests/`
-- `unit/` - Unit tests
-- `integration/` - Integration tests
-- `fixtures/` - Test fixtures and mocks
-
 ## Frontend Structure Details
 
-### `/frontend/src/components/`
+### `/src/frontend/components/`
 - `IdempotentForm/` - Form component for idempotent requests
 - `RequestHistory/` - Component to display request history
 - `CacheStatus/` - Component to show cache status
 
-### `/frontend/src/hooks/`
+### `/src/frontend/hooks/`
 - `useIdempotentRequest.js` - Hook for making idempotent requests
 - `useRequestCache.js` - Hook for managing request cache
 - `useIdempotencyKey.js` - Hook for generating idempotency keys
 
-### `/frontend/src/lib/`
+### `/src/frontend/lib/`
 - `api.js` - API client utilities
 - `cache.js` - Local storage cache utilities
 - `hash.js` - Request hash generation utilities
 
-### `/frontend/src/pages/`
+### `/src/frontend/pages/`
 - `Home.js` - Main demo page
 - `Documentation.js` - Usage documentation
 - `Examples.js` - Example implementations
@@ -88,18 +81,9 @@ This document outlines the recommended file structure for the Idempotent Request
 
 ### Root Level
 - `README.md` - Project overview and setup instructions
+- `NOTES.md` - Development notes and documentation
 - `.gitignore` - Git ignore rules
 - `package.json` - Project dependencies and scripts
-
-### Backend
-- `serverless.yml` - Serverless Framework configuration
-- `jest.config.js` - Jest test configuration
-- `.env.example` - Example environment variables
-
-### Frontend
-- `vite.config.js` - Vite configuration
-- `index.html` - Entry HTML file
-- `.env.example` - Example environment variables
 
 ## Best Practices
 
