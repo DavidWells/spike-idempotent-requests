@@ -46,6 +46,9 @@ class ManifestToEnvPlugin {
       // Create .env.prod content
       const envContent = `VITE_API_ENDPOINT=${apiUrl}\n`
       
+      // Create _redirects content
+      const redirectsContent = `/api/*  ${apiUrl}/api/:splat  200\n`
+      
       // Write to frontend .env.prod file
       const frontendEnvPath = path.join(
         process.cwd(),
@@ -54,9 +57,19 @@ class ManifestToEnvPlugin {
         '.env.production'
       )
       
+      // Write to frontend _redirects file
+      const frontendRedirectsPath = path.join(
+        process.cwd(),
+        '..',
+        'frontend',
+        '_redirects'
+      )
+      
       fs.writeFileSync(frontendEnvPath, envContent)
+      fs.writeFileSync(frontendRedirectsPath, redirectsContent)
       
       this.serverless.cli.log(`Successfully wrote VITE_API_ENDPOINT to ${frontendEnvPath}`)
+      this.serverless.cli.log(`Successfully wrote redirects to ${frontendRedirectsPath}`)
     } catch (error) {
       this.serverless.cli.log(`Error in ManifestToEnvPlugin: ${error.message}`)
       throw error
