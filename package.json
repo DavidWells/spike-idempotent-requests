@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "setup": "node scripts/setup.js"
+    "setup": "node scripts/setup.js",
+    "docs": "markdown README.md"
   },
   "keywords": [],
   "author": "David Wells"

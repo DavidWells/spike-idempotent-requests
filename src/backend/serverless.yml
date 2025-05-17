@@ -29,6 +29,23 @@ provider:
             - dynamodb:DeleteItem
           Resource: !GetAtt IdempotencyTable.Arn
 
+package:
+  individually: true
+  excludeDevDependencies: true
+  patterns:
+    - '!tests/**'
+    - '!.git/**'
+    - '!.github/**'
+    - '!.vscode/**'
+    - '!.env*'
+    - '!./node_modules/.pnpm/**'
+    - '!./node_modules/typescript/**'
+    - '!./node_modules/@babel/**'
+    - '!README.md'
+    - '!package-lock.json'
+    - '!yarn.lock'
+    - '!pnpm-lock.yaml'
+
 functions:
   idempotent:
     handler: src/idempotent.handler

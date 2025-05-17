@@ -2,6 +2,23 @@
 
 A demonstration project showcasing how to implement idempotent requests in AWS Lambda functions using the AWS Lambda Powertools library. This project includes both backend and frontend components to demonstrate the complete flow of idempotent request handling.
 
+<!-- doc-gen {TOC} collapse=false -->
+<details>
+<summary>Table of Contents</summary>
+
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+- [Development](#development)
+  - [Backend](#backend)
+  - [Frontend](#frontend)
+- [Key Features](#key-features)
+- [Architecture](#architecture)
+- [License](#license)
+
+</details>
+<!-- end-doc-gen -->
+
 ## Project Structure
 
 ```
