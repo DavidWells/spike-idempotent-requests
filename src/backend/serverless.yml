@@ -3,6 +3,7 @@ service: idempotent-requests-demo
 frameworkVersion: '3'
 
 plugins:
+  - serverless-offline
   - serverless-manifest-plugin
   # automatically injects the API_URL into the frontend environment
   - ./plugin.cjs

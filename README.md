@@ -35,7 +35,6 @@ A demonstration project showcasing how to implement idempotent requests in AWS L
 - Node.js (v18 or later)
 - pnpm (v10.11.0 or later)
 - AWS CLI configured with appropriate credentials
-- AWS SAM CLI (for local development)
 
 ## Setup
 
@@ -56,7 +55,7 @@ npm run setup
 
 ```bash
 cd src/backend
-pnpm run deploy
+npm run deploy
 ```
 
 ## Development
@@ -68,6 +67,12 @@ The backend consists of AWS Lambda functions that demonstrate idempotent request
 - Idempotent request handling using DynamoDB
 - Structured logging
 - Unit and integration tests
+
+To start the development server:
+
+```bash
+npm start
+```
 
 To run tests:
 
@@ -84,12 +89,12 @@ To start the development server:
 
 ```bash
 cd src/frontend
-pnpm run dev
+npm start
 ```
 
 Make sure to deploy the backend first to setup the API endpoint.
 
-Pull in the api endpoint automatically with
+Pull in the backend api endpoint automatically with
 
 ```bash
 cd src/frontend

@@ -51,7 +51,7 @@ class ManifestToEnvPlugin {
         process.cwd(),
         '..',
         'frontend',
-        '.env'
+        '.env.production'
       )
       
       fs.writeFileSync(frontendEnvPath, envContent)

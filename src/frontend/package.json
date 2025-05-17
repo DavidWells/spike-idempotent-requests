@@ -4,9 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "vite",
     "dev": "vite",
     "sync": "echo \"Syncing backend API URL to frontend...\" && cd ../backend && sls envsync && cd ../frontend",
-    "build": "vite build --mode production",
+    "build": "vite build",
     "serve": "vite preview",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",

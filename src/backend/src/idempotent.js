@@ -66,7 +66,7 @@ function responseHook(response, record) {
 }
 
 const idempotencyConfig = new IdempotencyConfig({
-  eventKeyJmesPath: 'headers."idempotency-key"',
+  eventKeyJmesPath: 'headers."Idempotency-Key" || headers."idempotency-key"',
   expiresAfterSeconds: parseInt(process.env.CACHE_TIME_IN_SECONDS), // 24 * 60 * 60, // 24 hours
   throwOnNoIdempotencyKey: true,
   useLocalCache: true,
